@@ -104,3 +104,46 @@ class Bboxes:
             self.bboxes[:, 1] += offsets[:, 1]  # top offsets   
 
             
+class DetectionResults:
+    """A class for handling detection results.
+
+    The class stores detection results including frame IDs, bounding boxes, class labels, and confidence scores.
+    Args:
+        frame_ids (np.ndarray): An array of frame IDs for each detection.
+        bboxes (Bboxes): A Bboxes object containing bounding box data.
+        classes (list): A list of class labels for each detection.
+        scores (np.ndarray): An array of confidence scores for each detection.
+    Methods:
+        filter_by_score: Filter detections by a minimum confidence score.
+    Examples:
+        Create detection results
+        >>> bboxes = Bboxes(np.array([[100, 50, 150, 100]]), format="xywh")
+        >>> detections = DetectionResults(np.array([0]), bboxes, ['person'], np.array([0.9]))
+        >>> filtered_detections = detections.filter_by_score(0.8)
+    """
+    def __init__(self, frame_ids: np.ndarray, bboxes: Bboxes, classes: list, scores: np.ndarray):
+        """Initialize DetectionResults object."""
+        assert frame_ids.ndim == 1
+        assert scores.ndim == 1
+        assert len(classes) == frame_ids.shape[0] == scores.shape[0] == bboxes.bboxes.shape[0]
+        self.frame_ids = frame_ids
+        self.bboxes = bboxes
+        self.classes = classes
+        self.scores = scores
+
+    def filter_by_score(self, min_score: float) -> 'DetectionResults':
+        """Filter detections by a minimum confidence score.
+
+        Args:
+            min_score (float): The minimum confidence score to keep a detection.
+        
+        Returns:
+            DetectionResults: A new DetectionResults object with filtered detections.
+        """
+        mask = self.scores >= min_score
+        filtered_frame_ids = self.frame_ids[mask]
+        filtered_bboxes = Bboxes(self.bboxes.bboxes[mask], format=self.bboxes.format)
+        filtered_classes = [cls for i, cls in enumerate(self.classes) if mask[i]]
+        filtered_scores = self.scores[mask]
+        return DetectionResults(filtered_frame_ids, filtered_bboxes, filtered_classes, filtered_scores)
+    

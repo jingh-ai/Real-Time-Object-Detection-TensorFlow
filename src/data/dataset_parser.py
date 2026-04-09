@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import os
 import json
+from src.data.data_type import Instance
 
 
 def parse_cvat_instances_xml(xml_file):
